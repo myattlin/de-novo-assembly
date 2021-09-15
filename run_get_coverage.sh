@@ -24,6 +24,6 @@ done
 ## For each reference_file (rf), one seq_type (st) must be providied for naming purpose.
 ## For each seq_type (st), a csv file will be generated in /mnt/d/data/
 ## If a csv file with the same name already exists, the new data will be appended to the existing csv file.
-## When ready, stay in the /home/user/ directory of ubuntu and execute this shell script file like "/directory_to_the_file/run_get_cov_4.sh". This is important because fastq-dump downloads sra file and saves the cache files in /home/user/ncbi/public/sra folder. The script will remove those cache files to prevent the hard drive from running out of space.
+## When ready, stay in the /home/user/ directory of ubuntu and execute this shell script file like "/directory_to_the_file/run_get_coverage.sh". This is important because fastq-dump downloads sra file and saves the cache files in /home/user/ncbi/public/sra folder. The script will remove those cache files to prevent the hard drive from running out of space.
  
 
