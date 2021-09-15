@@ -12,7 +12,7 @@ import os
 
 def fastq_dump(ncbi_id, fd_outdir):
 	"This function uses fastq dump to download the fastq file for the specified sra_id"
-	print ("running fastq-dump")
+	print ("running fastq-dump, it may take a few minutes or longer ...")
 	fd_cmd = "fastq-dump --defline-seq '@$ac.$si.$sg/$ri' --defline-qual" + \
 		 " '+' --split-files --outdir " + fd_outdir + " " + ncbi_id
 	runSubprocess(fd_cmd, stdout_file = fd_outdir + "fq_stdout.txt")
@@ -30,7 +30,7 @@ def bbmap(sra_id, bbmap_ref, bbmap_ref_file, bbmap_outdir, indir):
                    ' in=' + fq_files[0] + ' in2=' + fq_files[1] + \
                    ' vslow ref=' + bbmap_ref_file + \
                    ' nodisk threads=2 maxindel=100 strictmaxindel=t local=t samplerate=1 ' + \
-                   ' outm=' + bbmap_file_prefix + ".fq ignorebadquality"
+                   ' outm=' + bbmap_file_prefix + ".fq"
 	print("running bbmap: "+bbmap_cmd+"\n")	
 	runSubprocess(bbmap_cmd, stdout_file = bbmap_file_prefix + "_stdout.txt")
 
@@ -75,13 +75,13 @@ def bbtrim(outdir, bbsp_out1, bbsp_out2, left, right):
 	return(bbtrim_out1, bbtrim_out2)
 
 def trinity(tri_exe, outdir, bbmap_ref, tri_opts, left_file, right_file, opts_type):
-	"This function uses the trinity program to de novo assemble the small subunits"
+	"This function uses the Trinity program to de novo assemble the small subunits"
 	tri_file_prefix = outdir + "Trinity_" + opts_type + bbmap_ref[:-3]
 	left_file = " --left " + left_file
 	right_file = " --right " + right_file
 	tri_outdir = " --output " + tri_file_prefix + "/"
 	trinity_cmd = tri_exe + tri_opts + left_file + right_file + tri_outdir
-	print("running trinity " + opts_type + ": " + trinity_cmd+"\n")
+	print("running Trinity " + opts_type + ": " + trinity_cmd+"\n")
 	runSubprocess(trinity_cmd, stdout_file = tri_file_prefix + "_stdout.txt")
 	return(tri_file_prefix + ".Trinity.fasta")
 

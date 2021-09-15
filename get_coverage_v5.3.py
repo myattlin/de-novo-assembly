@@ -2,8 +2,8 @@
 """
 created on Wed Jun 12 10:07 2019
 
-@author: Heidi
-code fragments taken from Myat
+@authors: Heidi Salihovic and Myat Lin
+code fragments taken from Myat Lin
 
 input sra file --> extracts scquences that resemble the small subunit for rubisco using bbmap -->
 trinity de novo assembles the sequences --> use pairwise2 (similar to blast) to compair actual small subunit sequences with the assembled ones to determine which are properly assembled -->
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 		#print("SRA is %s \n" % sra_id)
 	else: sci_name = "NA"
 	
-	print("SRA to be analyzed is " + sra_id + " from " + sci_name+". \n")
+	print("SRA to be analyzed is " + sra_id + " from " + sci_name+".")
 
 	if args.reference_file:
 		bbmap_ref_file_list = args.reference_file
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 	if args.seq_type:
 		seq_type = args.seq_type
 		seq_type=seq_type.split(',')
-	else: seq_type = ['rbcS']
+	else: raise argparse.ArgumentTypeError('missing the input for seq_type')
 
 	#makes 2 subdirectories in the directory requested by the user using the scientific 
 	#name of the organism and the SRA id
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 	#print("Directory", indir, "made")	
 	try:
 		os.mkdir(indir)
-		print("Directory", indir, "made \n")
+		print("Directory", indir, "made")
 	except:
 		pass
 
@@ -172,8 +172,8 @@ if __name__ == "__main__":
 		bbsp_out1, bbsp_out2 = fbt.bbmap(sra_id, bbmap_ref, bbmap_ref_file, outdir, indir)
 		
 		#if bbmap was already ran, use these below
-		bbsp_out1 = outdir + "bbmap_" + bbmap_ref[:-3] + "_1.fq"
-		bbsp_out2 = outdir + "bbmap_" + bbmap_ref[:-3] + "_2.fq"
+		#bbsp_out1 = outdir + "bbmap_" + bbmap_ref[:-3] + "_1.fq"
+		#bbsp_out2 = outdir + "bbmap_" + bbmap_ref[:-3] + "_2.fq"
 		
 		#trimming the fq files and reassigning bbsp_out1 and bbsp_out2
 		if args.trim:
@@ -189,7 +189,9 @@ if __name__ == "__main__":
 		readLength = len(next(SeqIO.parse(bbsp_out1,'fastq')))
 		print("Read length = " + str(readLength) + "\n")
 
-		#bbmap will be skipped and unzipped gz files used as trinity input files
+		#to skip bbmap and use unzipped gz files as trinity input files
+		#for SRAs with reads mostly from the reference gene of interest
+		#confirm the names and locations of the fq files 
 		#bbsp_out1 = indir + sra_id + "_R1.fq"
 		#bbsp_out2 = indir + sra_id + "_R2.fq"
 	
@@ -201,7 +203,7 @@ if __name__ == "__main__":
 		#		shutil.copyfileobj(f_in, f_out)
 						
 		'''
-		#code for when dont want to rerun bbmap
+		#code for when you dont want to rerun bbmap
 		bbmap_file_prefix = outdir + "bbmap_" + bbmap_ref[:-3]
 		bbsp_out1 = bbmap_file_prefix + "_1.fq"
 		bbsp_out2 = bbmap_file_prefix + "_2.fq"
@@ -241,11 +243,12 @@ if __name__ == "__main__":
 		lines_split = filter(None,[line.split() for line in lines])
 		num_reads = int([line[1] for line in lines_split if line[0]=='Result:'][0])
 		#num_reads = 10001
-		print("num_reads with bbmap = " + str(num_reads) + "\n")
+		print("num_reads with bbmap = " + str(num_reads))
 		
 		#if there are more than 10000 reads only the first 5000 are extracted then
 		#used in trinity
 		if num_reads > (2 * 5000):
+			print("Trinity will be run two more times with only 5000 reads." + "\n")
 			seqtk_out1, seqtk_out2 = fbt.bb5000(outdir, bbsp_out1, bbsp_out2)
 			tri_fasta_temp = fbt.trinity(tri_exe, outdir, bbmap_ref, tri_opts_2 ,seqtk_out1, seqtk_out2, "5_")
 			if os.path.isfile(tri_fasta_temp):
@@ -287,7 +290,7 @@ if __name__ == "__main__":
 									ref_seq_rec_list, 
 									match_score, 
 									aln_score_th)				
-			print("%i trinity transcripts selected from trinity run %i" %\
+			print("%i Trinity assemblies selected from Trinity run %i" %\
 		       (len(best_list), trinity_count+1))#add 1 if run 1 is skpped
 			
 			#finds the read coverage for each trinity sequence that met the threshold
@@ -327,10 +330,12 @@ if __name__ == "__main__":
 		loop_count += 1
 	
 	#original sra files are removed if necessary
-	clean_up = True
 	if args.clean:
 		if args.clean.lower() in ["false", "f", "no", "n"]:
-			clean_up = False
-	if clean_up:
+			pass
+		else:
+			os.remove(indir + sra_id + "_1.fastq")
+			os.remove(indir + sra_id + "_2.fastq")
+	else:
 		os.remove(indir + sra_id + "_1.fastq")
 		os.remove(indir + sra_id + "_2.fastq")
